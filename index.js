@@ -30,5 +30,3 @@ app.listen(port,()=>{
     console.log('port run');
 })
 
-//DB_SERVICE=healthDbService
-// DB_PASSWORD=RDJ4rBHYcHpqRhv2

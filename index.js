@@ -57,6 +57,13 @@ async function run() {
             res.send(reviews);
         });
 
+        // add review 
+        app.post('/reviews', async (req, res) => {
+            const order = req.body;
+            const result = await reviewsCollection.insertOne(order);
+            res.send(result);
+        });
+
         // update review 
         app.patch('/review/:id', async (req, res) => {
             const id = req.params.id;
@@ -79,6 +86,7 @@ async function run() {
             const result = await reviewsCollection.deleteOne(query);
             res.send(result);
         })
+
 
 
     }

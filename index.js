@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +14,6 @@ app.use(express.json());
 app.use(cors());
 app.use(express.json());
 
-// const uri = `mongodb+srv://${process.env.DB_SERVICE}:${process.env.DB_PASSWORD}@cluster0.12ysiat.mongodb.net/?retryWrites=true&w=majority`;
 
 const uri = `mongodb+srv://${process.env.DB_SERVICE}:${process.env.DB_PASSWORD}@cluster0.r5wfiz1.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -24,6 +23,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const serviceCollection = client.db('healthcare').collection('services');
+        const reviewsCollection = client.db('healthcare').collection('reviews');
 
         // get all services 
         app.get('/services', async (req, res) => {
@@ -39,6 +39,14 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const service = await serviceCollection.findOne(query);
             res.send(service);
+        });
+
+        // get reviews
+        app.get('/reviews', async (req, res) => {
+            const id = req.query.id;
+            const query = { service_id: parseInt(id) };
+            const reviews = await reviewsCollection.find(query).toArray();
+            res.send(reviews);
         });
 
 

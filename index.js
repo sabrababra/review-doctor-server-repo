@@ -25,6 +25,15 @@ async function run() {
         const serviceCollection = client.db('healthcare').collection('services');
         const reviewsCollection = client.db('healthcare').collection('reviews');
 
+        // get limit services 
+        app.get('/homeServices', async (req, res) => {
+            const size = parseInt(req.query.size);
+            const query = {}
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.limit(size).toArray();
+            const count = await serviceCollection.estimatedDocumentCount();
+            res.send(services);
+        });
         // get all services 
         app.get('/services', async (req, res) => {
             const query = {}

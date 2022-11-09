@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -20,10 +21,34 @@ const uri = `mongodb+srv://${process.env.DB_SERVICE}:${process.env.DB_PASSWORD}@
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unauthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' });
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 async function run() {
     try {
         const serviceCollection = client.db('healthcare').collection('services');
         const reviewsCollection = client.db('healthcare').collection('reviews');
+
+        // login user 
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+            res.send({ token })
+        })
 
         // get limit services 
         app.get('/homeServices', async (req, res) => {
@@ -50,6 +75,13 @@ async function run() {
             res.send(service);
         });
 
+        // add service 
+        app.post('/service', verifyJWT, async (req, res) => {
+            const service = req.body;
+            const result = await serviceCollection.insertOne(service);
+            res.send(result);
+        });
+
         // get reviews for service
         app.get('/reviews', async (req, res) => {
             const id = req.query.id;
@@ -59,22 +91,30 @@ async function run() {
         });
 
         // get reviews for my reviews
-        app.get('/myReviews', async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
+        app.get('/myReviews', verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unauthorized access' })
+            }
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                }
+            }
             const reviews = await reviewsCollection.find(query).toArray();
             res.send(reviews);
         });
 
         // add review 
-        app.post('/reviews', async (req, res) => {
-            const order = req.body;
-            const result = await reviewsCollection.insertOne(order);
+        app.post('/reviews', verifyJWT, async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review);
             res.send(result);
         });
 
         // update review 
-        app.patch('/review/:id', async (req, res) => {
+        app.patch('/review/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const data = req.body
             const query = { _id: ObjectId(id) }
@@ -89,7 +129,7 @@ async function run() {
         })
 
         // delete review
-        app.delete('/review/:id', async (req, res) => {
+        app.delete('/review/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await reviewsCollection.deleteOne(query);

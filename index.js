@@ -41,10 +41,18 @@ async function run() {
             res.send(service);
         });
 
-        // get reviews
+        // get reviews for service
         app.get('/reviews', async (req, res) => {
             const id = req.query.id;
             const query = { service_id: parseInt(id) };
+            const reviews = await reviewsCollection.find(query).toArray();
+            res.send(reviews);
+        });
+
+        // get reviews for my reviews
+        app.get('/myReviews', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
             const reviews = await reviewsCollection.find(query).toArray();
             res.send(reviews);
         });

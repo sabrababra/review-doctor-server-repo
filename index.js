@@ -87,9 +87,12 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const id = req.query.id;
             const query = { service_id: parseInt(id) };
-            const reviews = await reviewsCollection.find(query)().sort ( { date: -1 } ).toArray();
-            res.send(reviews);
+            const reviews = await reviewsCollection.find(query).toArray();
+            const forSort=reviews.sort().reverse();
+            res.send(forSort);
         });
+       // toArray().sort().reverse()
+    //    await reviewsCollection.find(query).sort ( { date: -1 } ).toArray();
 
         // get reviews for my reviews
         app.get('/myReviews', verifyJWT, async (req, res) => {

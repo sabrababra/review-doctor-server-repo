@@ -86,7 +86,7 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const id = req.query.id;
             const query = { service_id: parseInt(id) };
-            const reviews = await reviewsCollection.find(query).toArray();
+            const reviews = await reviewsCollection.find(query)().sort ( { date: -1 } ).toArray();
             res.send(reviews);
         });
 

@@ -53,10 +53,9 @@ async function run() {
         // get limit services 
         app.get('/homeServices', async (req, res) => {
             const size = parseInt(req.query.size);
-            console.log(size);
             const query = {}
             const cursor = serviceCollection.find(query);
-            const services = await cursor.limit(size).toArray();
+            const services = await cursor.sort({ service_id: -1 }).limit(size).toArray();
             const count = await serviceCollection.estimatedDocumentCount();
             res.send(services);
         });
@@ -87,12 +86,12 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const id = req.query.id;
             const query = { service_id: parseInt(id) };
-            const reviews = await reviewsCollection.find(query).toArray();
-            const forSort=reviews.sort().reverse();
+            const reviews = await reviewsCollection.find(query).sort({ datefield: -1 }).toArray();
+            const forSort = reviews.sort().reverse();
             res.send(forSort);
         });
-       // toArray().sort().reverse()
-    //    await reviewsCollection.find(query).sort ( { date: -1 } ).toArray();
+        // toArray().sort().reverse()
+        //    await reviewsCollection.find(query).sort ( { date: -1 } ).toArray();
 
         // get reviews for my reviews
         app.get('/myReviews', verifyJWT, async (req, res) => {
